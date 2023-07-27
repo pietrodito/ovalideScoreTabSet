@@ -3,6 +3,9 @@ tableDesignerServer <- function(id, nature) {
   moduleServer(id, function(input, output, session) {
     ns <- NS(id)
 
+
+
+
     output$score <- shiny::renderUI({
       ovalide::load_score(nature)
       output$table <-
@@ -14,6 +17,15 @@ tableDesignerServer <- function(id, nature) {
     })
 
     r <- reactiveValues()
+
+    r$table_name_in_config <- NULL
+
+    observe({
+      req(r$table_name_in_config)
+      ovalideTableDesigner::tableDesignerServer("conf",
+                                                r$table_name_in_config,
+                                                nature)
+    })
 
     observe({
       req(input$table_cells_selected)
@@ -51,6 +63,18 @@ tableDesignerServer <- function(id, nature) {
           )
         ))
       })
+
+      add_config_event <- function(associated_table) {
+        to_eval <- glue::glue('
+          observeEvent(input$conf_<<associated_table>>, {
+            r$table_name_in_config <- "<<associated_table>>"
+          })', .open = "<<", .close = ">>")
+
+        eval(parse(text = to_eval))
+      }
+
+      purrr::walk(r$associated_tables, add_config_event)
+
       list(
         shiny::wellPanel(
           shiny::h1(id = ns("etab_label"), r$etablissement),
@@ -60,12 +84,18 @@ tableDesignerServer <- function(id, nature) {
         ),
         shiny::wellPanel(
           shiny::textOutput(ns("table_list_text")),
-          ## TODO work on ovalideTableDesigner to save formating files at
-          ## proper place
+
           (
             r$associated_tables
-            |> purrr::map(\(x) ovalide::ovalide_tables(ovalide::nature())[[x]])
-            |> purrr::map(\(t) DT::renderDT(t))
+            |> purrr::map(\(x)  ovalide::ovalide_tables(ovalide::nature())[[x]])
+            |> purrr::map(\(t)  DT::renderDT(t))
+            |> purrr::map2(r$associated_tables, \(dt, tab_name)
+                           shiny::wellPanel(
+                             dt,
+                             shiny::actionButton(ns(paste0("conf_", tab_name)),
+                                                 "Config"),
+                             shiny::actionButton(ns(paste0("rm_", tab_name)),
+                                                 "Supprime table")))
           ),
           shiny::actionButton(ns("add_table"), "Ajouter une table")
         ))
