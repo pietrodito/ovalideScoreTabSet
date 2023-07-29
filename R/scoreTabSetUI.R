@@ -10,7 +10,7 @@ scoreTabSetUI <- function(id) {
     tabPanel("Score"   , value = "Score"   , uiOutput(ns("score"))),
     tabPanel("Tableaux", value = "Tableaux", uiOutput(ns("tabs" ))),
     tabPanel("Config." , value = "Config." ,
-             ovalideTableDesigner::tableDesignerUI(ns("conf" )))
+             ovalideTableDesigner::tableDesignerUI(ns("conf"), debug = T))
   )
 }
 

@@ -25,6 +25,7 @@ tableDesignerServer <- function(id, nature) {
       ovalideTableDesigner::tableDesignerServer("conf",
                                                 r$table_name_in_config,
                                                 nature)
+      shiny::updateTabsetPanel(session, "tabSet", selected = "Config.")
     })
 
     observe({
